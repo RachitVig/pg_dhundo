@@ -26,12 +26,18 @@ apiClient.interceptors.request.use((config) => {
 
 // ── Service modules ───────────────────────────────────────────────────────────
 export const pgService = {
-  getAll:      (params) => apiClient.get('/pgs/',         { params }),
-  getOne:      (id)     => apiClient.get(`/pgs/${id}`),
-  create:      (data)   => apiClient.post('/pgs/',        data),
-  book:        (pgId, data) => apiClient.post(`/pgs/${pgId}/book`, data),
-  getHistory:  (pgId, clientId) => apiClient.get(`/chat/history/${pgId}/${clientId}`),
-  seed:        ()       => apiClient.get('/seed'),
+
+  getAll: (params) => apiClient.get('/pgs', { params }),
+  
+  getOne: (id) => apiClient.get(`/pgs/${id}`),
+  
+  create: (data) => apiClient.post('/pgs', data),
+  
+  book: (pgId) => apiClient.post(`/pgs/${pgId}/book`, {}),
+  
+  getHistory: (pgId, clientId) => apiClient.get(`/chat/history/${pgId}/${clientId}`),
+  
+  seed: () => apiClient.get('/seed'),
 };
 
 export const authService = {
