@@ -1,0 +1,13 @@
+{
+  "name": "pg-dhundo",
+  "version": "1.0.0",
+  "description": "PG Dhundo — Professional PG discovery platform",
+  "scripts": {
+    "install:frontend":  "cd frontend && npm install",
+    "dev:frontend":      "cd frontend && npm run dev",
+    "build":             "cd frontend && npm install && npm run build",
+    "preview:frontend":  "cd frontend && npm run preview",
+    "start:backend":     "cd backend && python run.py",
+    "install:backend":   "cd backend && pip install -r requirements.txt"
+  }
+}
