@@ -26,7 +26,7 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
     }
     setIsBooking(true);
     try {
-      const defaultRoomType = pg.rooms?.[0]?.room_type || "SINGLE";
+      const defaultRoomType = pg.room_options?.[0]?.room_type || "SINGLE";
       await pgService.book(pg.id, {
         name: currentUser.name,
         email: currentUser.email,
