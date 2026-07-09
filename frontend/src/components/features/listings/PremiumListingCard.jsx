@@ -4,15 +4,17 @@ import {
   ShieldCheck, User, Star, MapPin, Share2, Heart, 
   MessageSquare, ArrowRight 
 } from 'lucide-react';
+import { useToast } from '../../../context/ToastContext';
 
 const PremiumListingCard = ({ pg, onOpenChat, onViewDetails }) => {
+  const { addToast } = useToast();
   const [showReviews, setShowReviews] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-      alert(`Property link for "${pg.name}" copied to clipboard!`);
+      addToast(`Property link for "${pg.name}" copied to clipboard!`, 'info');
     });
   };
 

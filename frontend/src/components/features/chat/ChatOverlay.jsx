@@ -14,13 +14,22 @@ const ChatOverlay = ({ activeChatPg, setActiveChatPg, clientId, API_BASE, WS_BAS
       const fetchHistory = async () => {
         try {
           const res = await pgService.getHistory(activeChatPg.id, clientId);
-          setMessages(res.data.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
+          if (res.data.length === 0) {
+            setMessages([{
+              id: 'auto-1',
+              sender: 'Owner',
+              content: `Hi there! Thanks for your interest in ${activeChatPg.name}. Let me know if you want to schedule a visit or have any questions.`,
+              timestamp: new Date()
+            }]);
+          } else {
+            setMessages(res.data.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
+          }
         } catch (err) {
           console.error("History Error:", err);
           setMessages([{
-            id: 'system-1',
-            sender: 'System',
-            content: `Connected to ${activeChatPg.name}. No previous history.`,
+            id: 'auto-1',
+            sender: 'Owner',
+            content: `Hi there! Thanks for your interest in ${activeChatPg.name}. Let me know if you want to schedule a visit or have any questions.`,
             timestamp: new Date()
           }]);
         }

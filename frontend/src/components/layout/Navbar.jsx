@@ -4,14 +4,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useToast } from '../../context/ToastContext';
+import { authService } from '../../services/api';
 
 const Navbar = () => {
   const { currentUser, logout, setIsLoginModalOpen } = useAuth();
   const { currentView, setCurrentView, setIsOwnerModalOpen } = useNavigation();
   const { notifications, setNotifications } = useNotifications();
+  const { addToast } = useToast();
   
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const [adminResetSent, setAdminResetSent] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleAdminSubmit = (e) => {
+    e.preventDefault();
+    if (adminPassword === 'admin123') {
+      setCurrentView('admin');
+      setIsAdminModalOpen(false);
+      setAdminPassword('');
+      setAdminError('');
+      setAdminResetSent(false);
+    } else {
+      setAdminError('Incorrect administrative password.');
+    }
+  };
+
+  const handleAdminForgot = async () => {
+    setIsResetting(true);
+    setAdminError('');
+    try {
+      await authService.forgotPassword('adminpgdhundo@yopmail.com');
+      setAdminResetSent(true);
+    } catch (err) {
+      setAdminError(err.response?.data?.detail || 'Failed to dispatch administrative reset email.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-[2000] bg-white/90 backdrop-blur-xl border-b border-slate-200/50 px-6 py-4">
@@ -53,19 +87,26 @@ const Navbar = () => {
                              <p className="text-xs font-black text-slate-900 truncate mt-1">{currentUser.name}</p>
                           </div>
                           <div className="p-2">
-                             <button className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">My Profile</button>
-                             {currentUser?.email === 'admin@pgdhundo.com' && (
+                             <button
+                                onClick={() => { addToast('My Profile — Coming Soon! ', 'info'); setIsProfileOpen(false); }}
+                                className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-xl transition-colors flex items-center justify-between group"
+                              >
+                                My Profile
+                                <span className="text-[8px] font-black uppercase tracking-widest bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Soon</span>
+                              </button>
+                             {currentUser?.email === 'adminpgdhundo@yopmail.com' && (
                                 <button onClick={() => { 
-                                  const pwd = prompt("Enter one-time Admin Password:");
-                                  if(pwd === "admin123") {
-                                    setCurrentView('admin'); 
-                                    setIsProfileOpen(false); 
-                                  } else if (pwd) {
-                                    alert("Incorrect admin password.");
-                                  }
+                                  setIsAdminModalOpen(true);
+                                  setIsProfileOpen(false); 
                                 }} className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">Admin Panel</button>
                              )}
-                             <button className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">Settings</button>
+                             <button
+                                onClick={() => { addToast('Settings — Coming Soon! ', 'info'); setIsProfileOpen(false); }}
+                                className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-xl transition-colors flex items-center justify-between group"
+                              >
+                                Settings
+                                <span className="text-[8px] font-black uppercase tracking-widest bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Soon</span>
+                              </button>
                              <button 
                               onClick={() => { logout(); setIsProfileOpen(false); }}
                               className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
@@ -154,6 +195,70 @@ const Navbar = () => {
            <button onClick={() => setCurrentView('membership')} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">Join Now</button>
         </div>
       </div>
+
+      {/* Admin OTP Modal */}
+      <AnimatePresence>
+        {isAdminModalOpen && (
+          <div className="fixed inset-0 z-[5000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 10 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95, y: 10 }}
+               className="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl relative"
+             >
+                <div className="p-6 pb-0 flex justify-between items-start">
+                   <div>
+                      <h3 className="text-xl font-black uppercase tracking-tight text-slate-900">
+                        {adminResetSent ? 'Recovery Email Sent' : 'Admin Access'}
+                      </h3>
+                      <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mt-1">
+                        {adminResetSent ? 'Check adminpgdhundo@yopmail.com' : 'Restricted Zone'}
+                      </p>
+                   </div>
+                   <button onClick={() => { setIsAdminModalOpen(false); setAdminResetSent(false); }} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20}/></button>
+                </div>
+                
+                {adminResetSent ? (
+                   <div className="p-8 text-center animate-in zoom-in duration-300">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed mb-6">
+                         A secure password reset link has been dispatched to the master admin email address.
+                      </p>
+                      <button 
+                        onClick={() => setAdminResetSent(false)}
+                        className="text-[10px] font-black uppercase text-blue-600 hover:underline"
+                      >
+                         Back to Login
+                      </button>
+                   </div>
+                ) : (
+                   <form onSubmit={handleAdminSubmit} className="p-6 space-y-4">
+                      {adminError && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest bg-rose-50 p-3 rounded-xl border border-rose-100">{adminError}</p>}
+                      <div className="space-y-2">
+                         <div className="flex justify-between items-center px-1">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">One-Time Password</label>
+                            <button type="button" onClick={handleAdminForgot} className="text-[9px] font-black uppercase text-blue-600 hover:underline">
+                               Forgot?
+                            </button>
+                         </div>
+                         <input 
+                           autoFocus
+                           required 
+                           type="password" 
+                           value={adminPassword}
+                           onChange={(e) => setAdminPassword(e.target.value)}
+                           placeholder="••••••••" 
+                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-blue-500 transition-all" 
+                         />
+                      </div>
+                      <button disabled={isResetting} type="submit" className="w-full py-4 bg-slate-900 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2">
+                         {isResetting ? <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> : 'Authenticate'}
+                      </button>
+                   </form>
+                )}
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
