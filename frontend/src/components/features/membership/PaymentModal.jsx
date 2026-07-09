@@ -5,8 +5,10 @@ import {
   ArrowRight, CheckCircle2, QrCode, Phone,
   Lock, Wallet
 } from 'lucide-react';
+import { useToast } from '../../../context/ToastContext';
 
 const PaymentModal = ({ isOpen, onClose, plan }) => {
+  const { addToast } = useToast();
   const [step, setStep] = useState('selection'); // selection, razorpay, qr, success
   const [processing, setProcessing] = useState(false);
 
@@ -17,9 +19,63 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   if (!isOpen || !plan) return null;
 
+  const handleRazorpay = () => {
+    setProcessing(true);
+    setTimeout(() => {
+      setProcessing(false);
+      
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY || 'rzp_test_YOUR_KEY_HERE',
+        amount: plan.price * 100, // paise
+        currency: 'INR',
+        name: 'PG Dhundo',
+        description: `${plan.name} Membership`,
+        image: '/pg_dhundo_logo.png',
+        handler: function (response) {
+          setStep('success');
+        },
+        prefill: {
+          name: 'Premium Member',
+          email: 'member@pgdhundo.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#2563eb'
+        }
+      };
+
+      try {
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response){
+          console.error("Payment failed", response.error);
+          addToast("Payment Failed: " + response.error.description, 'error');
+        });
+        rzp.open();
+      } catch (err) {
+        addToast("Demo Mode: Razorpay key invalid, simulating successful payment.", 'info');
+        console.warn("Razorpay init failed, simulating success.", err);
+        setTimeout(() => setStep('success'), 2000);
+      }
+    }, 1000);
+  };
+
   const handlePayment = (method) => {
+    if (method === 'razorpay') {
+      handleRazorpay();
+      return;
+    }
     setProcessing(true);
     setTimeout(() => {
       setProcessing(false);
@@ -104,42 +160,7 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
                 </div>
              )}
 
-             {step === 'razorpay' && (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                   <div className="flex items-center gap-2 mb-8">
-                      <button onClick={() => setStep('selection')} className="text-[10px] font-black uppercase text-blue-600 hover:underline">← Back</button>
-                   </div>
-                   <div className="space-y-4">
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Card Number</label>
-                         <div className="relative">
-                            <input type="text" placeholder="XXXX XXXX XXXX XXXX" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:border-blue-500 transition-all" />
-                            <CreditCard className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Expiry</label>
-                            <input type="text" placeholder="MM/YY" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:border-blue-500 transition-all" />
-                         </div>
-                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">CVV</label>
-                            <div className="relative">
-                               <input type="password" placeholder="***" className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:border-blue-500 transition-all" />
-                               <Lock className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-                   <button 
-                     onClick={finalizePayment}
-                     disabled={processing}
-                     className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-blue-700 transition-all"
-                   >
-                      {processing ? <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> : `Pay ₹${plan.price}`}
-                   </button>
-                </div>
-             )}
+             {/* Removed fake razorpay step in favor of the real Razorpay modal */}
 
              {step === 'qr' && (
                 <div className="text-center space-y-6 animate-in fade-in duration-500">

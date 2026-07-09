@@ -4,8 +4,10 @@ import {
   ShieldCheck, Lock, Bell, UserCheck, 
   ShieldAlert, Sparkles, CheckCircle2
 } from 'lucide-react';
+import { useToast } from '../../../context/ToastContext';
 
 const Safety = ({ onBack }) => {
+  const { addToast } = useToast();
   const safetyFeatures = [
     {
       icon: <ShieldCheck className="text-blue-500" size={32} />,
@@ -53,7 +55,7 @@ const Safety = ({ onBack }) => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              onClick={() => alert("The PG Dhundo Resident Safety Manual is being generated for your account. Please check your email or wait for the PDF to prepare.")}
+              onClick={() => addToast("The PG Dhundo Resident Safety Manual is being generated for your account. Please check your email or wait for the PDF to prepare.", 'info')}
               className="bg-blue-600 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
             >
               Download Safety Manual

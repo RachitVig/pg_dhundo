@@ -19,9 +19,9 @@ const Signup = () => {
     
     try {
       const res = await authService.register(formData);
-      // After successful registration, show success and maybe redirect to login
-      setError('Account created! redirecting to login...');
-      setTimeout(() => setCurrentView('login'), 2000);
+      // Auto-login after successful registration
+      login(res.data.user, res.data.access_token);
+      setCurrentView('home');
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.');
     } finally {

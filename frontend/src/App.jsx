@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PGProvider, usePGs } from './context/PGContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ToastProvider } from './context/ToastContext';
 
 // Services constants
 import { API_BASE, WS_BASE } from './services/api';
@@ -95,7 +96,9 @@ function App() {
       <PGProvider>
         <NavigationProvider>
           <NotificationProvider>
-            <AppContent />
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
           </NotificationProvider>
         </NavigationProvider>
       </PGProvider>
