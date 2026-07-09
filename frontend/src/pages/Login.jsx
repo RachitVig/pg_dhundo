@@ -16,12 +16,19 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Anti-spam click guard
+    
     setLoading(true);
     setError('');
     
     try {
       const res = await authService.login({ email: formData.email, password: formData.password });
-      login(res.data.user, res.data.access_token);
+      
+      // FastAPI strictly expects access_token
+      const token = res.data.access_token || res.data.token;
+      
+      // Sync strictly with AuthContext
+      login(res.data.user, token);
       setCurrentView('home');
     } catch (err) {
       setError(err.response?.data?.detail || 'Authentication failed. Please try again.');
@@ -67,7 +74,7 @@ const Login = () => {
            <h1 className="text-6xl font-black text-slate-900 leading-tight uppercase mb-8">
               Welcome <br/><span className="text-blue-600">Back.</span>
            </h1>
-           <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-md mb-12">
+           <p className="text-lg text-slate-50 font-medium leading-relaxed max-w-md mb-12">
               Sign in to continue your search for the perfect PG. Access your saved listings and connect with hosts instantly.
            </p>
            
@@ -224,14 +231,21 @@ const Login = () => {
 
           <div className="grid grid-cols-2 gap-4">
              <button type="button" onClick={() => {
-                login({ name: "Admin Google User", email: "adminpgdhundo@yopmail.com" });
+                // Mocking valid sync token data structure for auth context validation bypass
+                login(
+                  { name: "Admin Google User", email: "adminpgdhundo@yopmail.com" },
+                  "dummy_mock_google_token_12345"
+                );
                 setCurrentView('home');
              }} className="py-4 border border-slate-200 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
                 <Chrome size={18} className="text-slate-600" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Google</span>
              </button>
              <button type="button" onClick={() => {
-                login({ name: "Github User", email: "user@github.com" });
+                login(
+                  { name: "Github User", email: "user@github.com" },
+                  "dummy_mock_github_token_12345"
+                );
                 setCurrentView('home');
              }} className="py-4 border border-slate-200 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
                 <Github size={18} className="text-slate-600" />
