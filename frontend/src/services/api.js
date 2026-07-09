@@ -33,7 +33,7 @@ export const pgService = {
   
   create: (data) => apiClient.post('/pgs', data),
   
-  book: (pgId) => apiClient.post(`/pgs/${pgId}/book`, {}),
+  book: (pgId,data) => apiClient.post(`/pgs/${pgId}/book`, data),
   
   getHistory: (pgId, clientId) => apiClient.get(`/chat/history/${pgId}/${clientId}`),
   
