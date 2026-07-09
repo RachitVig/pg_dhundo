@@ -65,7 +65,7 @@ Search, shortlist, chat, and book verified PG accommodations — no brokers, no 
 | Frontend Hosting | Vercel (global CDN, auto HTTPS) |
 | Backend Hosting | Render (free tier, auto-deploy) |
 | Database | Neon PostgreSQL (serverless, free) |
-| Email | Gmail SMTP via App Password |
+| Gmail SMTP via App Password |
 
 ---
 
