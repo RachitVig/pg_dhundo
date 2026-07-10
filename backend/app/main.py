@@ -13,16 +13,7 @@ from app.routes import pgs, chat, auth, admin, bookings
 
 # ── Create all tables ─────────────────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
-# ── Create all tables ─────────────────────────────────────────────────────────
-Base.metadata.create_all(bind=engine)
 
-# ── App instance ──────────────────────────────────────────────────────────────
-app = FastAPI(
-    title=settings.APP_TITLE,
-    version=settings.APP_VERSION,
-    docs_url="/docs" if not settings.is_production else None,
-    redoc_url="/redoc" if not settings.is_production else None,
-)
 # ── App instance ──────────────────────────────────────────────────────────────
 app = FastAPI(
     title=settings.APP_TITLE,
@@ -36,8 +27,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept"],
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
 )
