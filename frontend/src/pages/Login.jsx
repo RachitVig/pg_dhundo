@@ -29,7 +29,11 @@ const Login = () => {
       
       // Sync strictly with AuthContext
       login(res.data.user, token);
-      setCurrentView('home');
+      if (['admin@pgdhundo.com', 'adminpgdhundo@yopmail.com'].includes(res.data.user.email)) {
+        setCurrentView('admin');
+      } else {
+        setCurrentView('home');
+      }
     } catch (err) {
       setError(err.response?.data?.detail || 'Authentication failed. Please try again.');
     } finally {
@@ -236,7 +240,7 @@ const Login = () => {
                   { name: "Admin Google User", email: "adminpgdhundo@yopmail.com" },
                   "dummy_mock_google_token_12345"
                 );
-                setCurrentView('home');
+                setCurrentView('admin');
              }} className="py-4 border border-slate-200 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
                 <Chrome size={18} className="text-slate-600" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Google</span>

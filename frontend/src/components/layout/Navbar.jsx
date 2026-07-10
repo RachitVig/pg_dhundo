@@ -214,9 +214,9 @@ const Navbar = () => {
                                >
                                  Owner Dashboard
                                </button>
-                               {currentUser?.email === 'admin@pgdhundo.com' && (
+                               {['admin@pgdhundo.com', 'adminpgdhundo@yopmail.com'].includes(currentUser?.email) && (
                                  <button
-                                   onClick={() => { setIsAdminModalOpen(true); setIsProfileOpen(false); }}
+                                   onClick={() => { setCurrentView('admin'); setIsProfileOpen(false); showToast('Welcome to Admin Panel 🛡️'); }}
                                    className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex items-center gap-2"
                                  >
                                    <ShieldCheck size={12} /> Admin Panel
