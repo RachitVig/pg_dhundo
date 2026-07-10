@@ -7,26 +7,28 @@ const ToastContext = createContext();
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'success') => {
+  const showToast = useCallback((message, type = 'success') => {
     const id = Date.now().toString();
-    setToasts(prev => [...prev, { id, message, type }]);
-    
+    setToasts((prev) => [...prev, { id, message, type }]);
 
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
   }, []);
 
+  // Alias for backward compatibility
+  const addToast = showToast;
+
   const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={{ showToast, addToast }}>
       {children}
       <div className="fixed bottom-6 right-6 z-[9000] flex flex-col gap-3 pointer-events-none">
         <AnimatePresence>
-          {toasts.map(toast => (
+          {toasts.map((toast) => (
             <motion.div
               key={toast.id}
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -39,21 +41,21 @@ export const ToastProvider = ({ children }) => {
                 toast.type === 'info' ? 'bg-blue-100 text-blue-600' :
                 'bg-emerald-100 text-emerald-600'
               }`}>
-                {toast.type === 'error' ? <AlertCircle size={20} /> : 
+                {toast.type === 'error' ? <AlertCircle size={20} /> :
                  toast.type === 'info' ? <Info size={20} /> :
                  <CheckCircle2 size={20} />}
               </div>
               <p className="text-xs font-bold text-slate-700 leading-relaxed">{toast.message}</p>
-              
-              <button 
+
+              <button
                 onClick={() => removeToast(toast.id)}
                 className="absolute top-1/2 -translate-y-1/2 right-4 text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X size={16} />
               </button>
-              
+
               {/* Progress bar effect */}
-              <motion.div 
+              <motion.div
                 initial={{ width: '100%' }}
                 animate={{ width: 0 }}
                 transition={{ duration: 5, ease: 'linear' }}

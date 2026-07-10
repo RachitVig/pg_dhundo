@@ -44,6 +44,7 @@ class PGListing(Base):
     owner_id = Column(Integer, ForeignKey("owners.id"))
     owner_phone = Column(String)
     amenities = Column(String)
+    status = Column(String, default="PENDING") # PENDING, APPROVED, REJECTED
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     owner = relationship("Owner", back_populates="pgs")
@@ -128,3 +129,21 @@ class ChatMessage(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
     pg = relationship("PGListing")
+
+
+class Booking(Base):
+    __tablename__ = "bookings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    pg_id = Column(Integer, ForeignKey("pg_listings.id"))
+    owner_id = Column(Integer, ForeignKey("owners.id"))
+    user_name = Column(String)
+    user_email = Column(String)
+    user_phone = Column(String)
+    requirements = Column(String)
+    preferred_time = Column(String)
+    status = Column(String, default="PENDING") # PENDING, CONFIRMED, REJECTED
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    pg = relationship("PGListing")
+    owner = relationship("Owner")

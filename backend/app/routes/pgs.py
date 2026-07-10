@@ -8,8 +8,7 @@ from typing import List, Optional
 
 from app.database import get_db
 from app.models import PGListing, Room, Owner
-from app.schemas import PGListingSchema, PGCreateRequest, BookingInquiryRequest
-from app.core.email import send_email
+from app.schemas import PGListingSchema, PGCreateRequest
 
 router = APIRouter()
 
@@ -29,29 +28,23 @@ def serialize_pg(pg) -> dict:
         "owner_id": pg.owner_id,
         "owner_phone": pg.owner_phone,
         "amenities": pg.amenities,
-        "rooms": [
-            {
-                "id": r.id,
-                "room_type": r.room_type,
-                "price": r.price,
-                "total_beds": r.total_beds,
-                "occupied_beds": r.occupied_beds,
-            }
-            for r in pg.rooms
-        ],
-        "reviews": [
-            {
-                "id": rev.id,
-                "user_name": rev.user_name,
-                "food_rating": rev.food_rating,
-                "room_rating": rev.room_rating,
-                "facilities_rating": rev.facilities_rating,
-                "value_rating": rev.value_rating,
-                "comment": rev.comment,
-                "created_at": rev.created_at,
-            }
-            for rev in pg.reviews
-        ],
+        "status": pg.status,
+        "rooms": [{
+            "id": r.id,
+            "room_type": r.room_type,
+            "price": r.price,
+            "total_beds": r.total_beds,
+            "occupied_beds": r.occupied_beds
+        } for r in pg.rooms],
+        "reviews": [{
+            "id": rev.id,
+            "user_name": rev.user_name,
+            "food_rating": rev.food_rating,
+            "room_rating": rev.room_rating,
+            "facilities_rating": rev.facilities_rating,
+            "value_rating": rev.value_rating,
+            "comment": rev.comment
+        } for rev in pg.reviews]
     }
 
 
@@ -63,7 +56,7 @@ async def get_pgs(
 ):
     """List all PG listings with optional filters for area and gender category."""
     try:
-        query = db.query(PGListing)
+        query = db.query(PGListing).filter(PGListing.status == "APPROVED")
         if area:
             query = query.filter(PGListing.area.ilike(f"%{area}%"))
         if gender and gender.upper() != "ALL":
@@ -73,6 +66,19 @@ async def get_pgs(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/all", response_model=List[PGListingSchema])
+async def get_all_pgs(db: Session = Depends(get_db)):
+    # For Admin — must be declared BEFORE /{pg_id} to avoid route conflict
+    pgs = db.query(PGListing).order_by(PGListing.id.desc()).all()
+    return [serialize_pg(pg) for pg in pgs]
+
+
+@router.get("/owner/{owner_id}", response_model=List[PGListingSchema])
+async def get_owner_pgs(owner_id: int, db: Session = Depends(get_db)):
+    pgs = db.query(PGListing).filter(PGListing.owner_id == owner_id).order_by(PGListing.id.desc()).all()
+    return [serialize_pg(pg) for pg in pgs]
 
 
 @router.get("/{pg_id}", response_model=PGListingSchema)
@@ -106,7 +112,8 @@ async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
             rating=5.0,
             owner_id=owner.id,
             owner_phone=owner.phone,
-            amenities=pg_data.amenities or "WiFi,AC,Security,Meals",
+            amenities="WiFi, AC, Security, Meals",  # Default
+            status="PENDING"
         )
         db.add(new_pg)
         db.flush()
@@ -128,75 +135,12 @@ async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/{pg_id}/book")
-async def book_pg(pg_id: int, req: BookingInquiryRequest, db: Session = Depends(get_db)):
-    """
-    Handle PG booking inquiry and dispatch emails to both owner and customer.
-    """
+@router.put("/{pg_id}/status")
+async def update_pg_status(pg_id: int, status: str, db: Session = Depends(get_db)):
     pg = db.query(PGListing).filter(PGListing.id == pg_id).first()
     if not pg:
-        raise HTTPException(status_code=404, detail="PG listing not found.")
-
-    owner_email = pg.owner.email if pg.owner else "owner@pgdhundo.com"
-    owner_name = pg.owner.name if pg.owner else "Owner"
-
-    # Email to Owner
-    owner_body = f"""
-    <html>
-        <body style="font-family: sans-serif; padding: 20px; color: #333;">
-            <h2 style="color: #2563eb;">New Booking Inquiry for {pg.name}</h2>
-            <p>Hello {owner_name},</p>
-            <p>A user has expressed interest in booking a spot in your property, <strong>{pg.name}</strong>.</p>
-            <h3>Inquiry Details:</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Name:</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">{req.name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Email:</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:{req.email}">{req.email}</a></td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Phone:</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">{req.phone}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Room Configuration:</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">{req.room_type} Sharing</td>
-                </tr>
-            </table>
-            <p>Please contact the prospective tenant shortly to finalize details.</p>
-        </body>
-    </html>
-    """
-
-    # Email to User
-    user_body = f"""
-    <html>
-        <body style="font-family: sans-serif; padding: 20px; color: #333;">
-            <h2 style="color: #2563eb;">Booking Inquiry Confirmed</h2>
-            <p>Hello {req.name},</p>
-            <p>Your booking inquiry for <strong>{pg.name}</strong> has been successfully received.</p>
-            <p>The property owner, <strong>{owner_name}</strong>, has been notified of your interest and will reach out to you at <strong>{req.phone}</strong> or <strong>{req.email}</strong> shortly.</p>
-            <p>Thank you for choosing PG Dhundo!</p>
-        </body>
-    </html>
-    """
-
-    # Send to owner
-    send_email(
-        to_email=owner_email,
-        subject=f"PG Dhundo — New Booking Inquiry for {pg.name}",
-        body=owner_body
-    )
-
-    # Send to user
-    send_email(
-        to_email=req.email,
-        subject=f"PG Dhundo — Booking Inquiry Confirmed for {pg.name}",
-        body=user_body
-    )
-
-    return {"status": "success", "message": "Inquiry emails dispatched."}
-
+        raise HTTPException(status_code=404, detail="PG not found")
+    pg.status = status
+    db.commit()
+    db.refresh(pg)
+    return serialize_pg(pg)

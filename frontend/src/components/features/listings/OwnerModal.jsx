@@ -30,7 +30,7 @@ const OwnerModal = ({ isOpen, onClose }) => {
         description: formData.description,
         address: formData.area + ', Chandigarh'
       });
-      addToast("Property submitted successfully! Our team will visit within 48 hours for KYC.");
+      addToast("Property submitted successfully! Our team will review it and visit within 48 hours for KYC.", "success");
       onClose();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to submit property.");

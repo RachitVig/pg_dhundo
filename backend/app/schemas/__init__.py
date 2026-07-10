@@ -2,7 +2,7 @@
 app/schemas/__init__.py
 Re-exports all Pydantic schemas.
 """
-from app.schemas.schemas import (  
+from app.schemas.schemas import (  # noqa: F401
     RoomSchema,
     ReviewSchema,
     PGListingSchema,
@@ -16,4 +16,6 @@ from app.schemas.schemas import (
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     BookingInquiryRequest,
+    BookingCreate,
+    BookingSchema,
 )

@@ -132,3 +132,24 @@ class BookingInquiryRequest(BaseModel):
     email: str
     phone: str
     room_type: str
+
+
+# ── Booking Schemas ───────────────────────────────────────────────────────────
+
+class BookingCreate(BaseModel):
+    pg_id: int
+    user_name: str
+    user_email: str
+    user_phone: str
+    requirements: str
+    preferred_time: str
+
+
+class BookingSchema(BookingCreate):
+    id: int
+    owner_id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+      from_attributes = True

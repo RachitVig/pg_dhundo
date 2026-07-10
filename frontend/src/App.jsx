@@ -14,6 +14,7 @@ import About from './pages/About';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AdminDashboard from './pages/AdminDashboard';
+import OwnerDashboard from './pages/OwnerDashboard';
 import Safety from './components/features/safety/Safety';
 import Membership from './components/features/membership/Membership';
 
@@ -64,6 +65,9 @@ function AppContent() {
         )}
         {currentView === 'admin' && (
           <AdminDashboard />
+        )}
+        {currentView === 'owner_dashboard' && (
+          <OwnerDashboard />
         )}
       </AnimatePresence>
 

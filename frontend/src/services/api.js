@@ -28,15 +28,14 @@ apiClient.interceptors.request.use((config) => {
 export const pgService = {
 
   getAll: (params) => apiClient.get('/pgs', { params }),
-  
   getOne: (id) => apiClient.get(`/pgs/${id}`),
-  
-  create: (data) => apiClient.post('/pgs', data),
-  
-  book: (pgId,data) => apiClient.post(`/pgs/${pgId}/book`, data),
-  
+  create: (data) => apiClient.post('/pgs/', data),
+  getAll_admin: () => apiClient.get('/pgs/all'),
+  getOwnerPgs: (ownerId) => apiClient.get(`/pgs/owner/${ownerId}`),
+  updateStatus: (pgId, status) => apiClient.put(`/pgs/${pgId}/status?status=${status}`),
   getHistory: (pgId, clientId) => apiClient.get(`/chat/history/${pgId}/${clientId}`),
-  
+  book: (pgId, data) => apiClient.post('/bookings/', { pg_id: pgId, ...data }),
+
   seed: () => apiClient.get('/seed'),
 };
 
@@ -48,6 +47,13 @@ export const authService = {
 
 export const adminService = {
   getDashboardStats: () => apiClient.get('/admin/dashboard'),
+  getAllUsers: () => apiClient.get('/admin/users'),
+};
+
+export const bookingService = {
+  createBooking: (data) => apiClient.post('/bookings/', data),
+  getOwnerBookings: (ownerId) => apiClient.get(`/bookings/owner/${ownerId}`),
+  verifyBooking: (bookingId, data) => apiClient.put(`/bookings/${bookingId}/verify`, data),
 };
 
 // ── WebSocket URL builder ─────────────────────────────────────────────────────
