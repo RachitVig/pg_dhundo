@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 import { pgService } from '../../../services/api';
+import { useToast } from '../../../context/ToastContext';
 
 const OwnerModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const OwnerModal = ({ isOpen, onClose }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { showToast } = useToast();
 
   if (!isOpen) return null;
 
@@ -28,7 +30,7 @@ const OwnerModal = ({ isOpen, onClose }) => {
         description: formData.description,
         address: formData.area + ', Chandigarh'
       });
-      alert("Property submitted successfully! Our team will visit within 48 hours for KYC.");
+      showToast("Property submitted for approval! Our team will review it shortly.");
       onClose();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to submit property.");

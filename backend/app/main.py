@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.database import engine, get_db
 from app import models
-from app.routes import pgs, chat, auth, admin
+from app.routes import pgs, chat, auth, admin, bookings
 
 # Ensure tables exist
 models.Base.metadata.create_all(bind=engine)
@@ -13,7 +13,7 @@ app = FastAPI(title="PG Dhundo Advanced API")
 # --- CORS CONFIGURATION ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For development, allow all
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,6 +24,7 @@ app.include_router(pgs.router)
 app.include_router(chat.router)
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(bookings.router)
 
 @app.get("/")
 async def root():
@@ -45,7 +46,7 @@ async def seed_data(db: Session = Depends(get_db)):
                 name=name, area=area, address=address, lat=lat, lng=lng,
                 gender_category=gender, rating=rating, amenities=amenities,
                 owner_id=owner.id, owner_phone=owner.phone,
-                description=desc
+                description=desc, status="APPROVED"
             )
             db.add(pg)
             db.flush()

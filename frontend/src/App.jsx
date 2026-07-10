@@ -14,6 +14,7 @@ import About from './pages/About';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AdminDashboard from './pages/AdminDashboard';
+import OwnerDashboard from './pages/OwnerDashboard';
 import Safety from './components/features/safety/Safety';
 import Membership from './components/features/membership/Membership';
 
@@ -22,6 +23,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PGProvider, usePGs } from './context/PGContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ToastProvider } from './context/ToastContext';
 
 // Services constants
 import { API_BASE, WS_BASE } from './services/api';
@@ -64,6 +66,9 @@ function AppContent() {
         {currentView === 'admin' && (
           <AdminDashboard />
         )}
+        {currentView === 'owner_dashboard' && (
+          <OwnerDashboard />
+        )}
       </AnimatePresence>
 
       <ChatOverlay 
@@ -95,7 +100,9 @@ function App() {
       <PGProvider>
         <NavigationProvider>
           <NotificationProvider>
-            <AppContent />
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
           </NotificationProvider>
         </NavigationProvider>
       </PGProvider>

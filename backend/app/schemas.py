@@ -35,8 +35,9 @@ class PGListingSchema(BaseModel):
     gender_category: str
     rating: float
     owner_id: int
-    owner_phone: str
-    amenities: str
+    owner_phone: Optional[str] = None
+    amenities: Optional[str] = None
+    status: Optional[str] = "PENDING"
     rooms: List[RoomSchema]
     reviews: List[ReviewSchema]
 
@@ -66,3 +67,20 @@ class AdminStatsResponse(BaseModel):
     total_reviews: int
     recent_pgs: List[PGListingSchema]
     recent_users: List[dict]
+
+class BookingCreate(BaseModel):
+    pg_id: int
+    user_name: str
+    user_email: str
+    user_phone: str
+    requirements: str
+    preferred_time: str
+
+class BookingSchema(BookingCreate):
+    id: int
+    owner_id: int
+    status: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

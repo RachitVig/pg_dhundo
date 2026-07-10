@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import BookingModal from './BookingModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, MapPin, Star, ShieldCheck, User, 
@@ -8,6 +9,8 @@ import {
 import SmartMap from '../../shared/SmartMap';
 
 const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+
   if (!isOpen || !pg) return null;
 
   const amenitiesWithIcons = [
@@ -38,7 +41,7 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
 
           {/* Left: Image Gallery */}
           <div className="md:w-1/2 h-64 md:h-full relative overflow-hidden bg-slate-900">
-             <img src={pg.images[0]} className="w-full h-full object-cover" alt={pg.name} />
+             <img src={pg.images?.[0] || `https://placehold.co/800x600/1e293b/ffffff?text=${encodeURIComponent(pg.name)}`} className="w-full h-full object-cover" alt={pg.name} />
              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
              <div className="absolute bottom-10 left-10 text-white">
                 <div className="flex items-center gap-2 mb-4">
@@ -94,10 +97,10 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
              <div className="mb-12">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-6">Available Configurations</h3>
                 <div className="space-y-4">
-                   {pg.room_options.map((room, idx) => (
+                    {(pg.rooms || []).map((room, idx) => (
                       <div key={idx} className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center group hover:bg-white hover:border-blue-200 transition-all shadow-sm hover:shadow-md">
                          <div>
-                            <h4 className="text-sm font-black uppercase text-slate-900 tracking-tight">{room.room_type} Sharing</h4>
+                             <h4 className="text-sm font-black uppercase text-slate-900 tracking-tight">{room.room_type} Room</h4>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                                {room.occupied_beds < room.total_beds ? `${room.total_beds - room.occupied_beds} Beds Available` : 'Fully Occupied'}
                             </p>
@@ -128,7 +131,7 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
                    <MessageSquare size={18} /> Chat Owner
                 </button>
                 <button 
-                  onClick={() => alert("Booking Inquiry Sent! Our team will contact you shortly.")}
+                  onClick={() => setIsBookingOpen(true)}
                   className="flex-[1.5] py-5 bg-blue-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-2xl shadow-blue-200 active:scale-95 group"
                 >
                    Book This PG <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -136,6 +139,12 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
              </div>
           </div>
         </motion.div>
+        
+        <BookingModal 
+          isOpen={isBookingOpen} 
+          onClose={() => setIsBookingOpen(false)} 
+          pg={pg} 
+        />
       </div>
     </AnimatePresence>
   );

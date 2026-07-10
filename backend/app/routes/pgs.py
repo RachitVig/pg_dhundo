@@ -20,6 +20,7 @@ def serialize_pg(pg):
         "owner_id": pg.owner_id,
         "owner_phone": pg.owner_phone,
         "amenities": pg.amenities,
+        "status": pg.status,
         "rooms": [{
             "id": r.id,
             "room_type": r.room_type,
@@ -45,7 +46,7 @@ async def get_pgs(
     db: Session = Depends(get_db)
 ):
     try:
-        query = db.query(models.PGListing)
+        query = db.query(models.PGListing).filter(models.PGListing.status == "APPROVED")
         if area:
             query = query.filter(models.PGListing.area.ilike(f"%{area}%"))
         if gender and gender != "All":
@@ -82,7 +83,8 @@ async def create_pg(
             rating=5.0, # Initial rating
             owner_id=owner.id,
             owner_phone=owner.phone,
-            amenities="WiFi, AC, Security, Meals" # Default
+            amenities="WiFi, AC, Security, Meals", # Default
+            status="PENDING"
         )
         db.add(new_pg)
         db.flush()
@@ -103,3 +105,24 @@ async def create_pg(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/all", response_model=List[schemas.PGListingSchema])
+async def get_all_pgs(db: Session = Depends(get_db)):
+    # For Admin
+    pgs = db.query(models.PGListing).order_by(models.PGListing.id.desc()).all()
+    return [serialize_pg(pg) for pg in pgs]
+
+@router.get("/owner/{owner_id}", response_model=List[schemas.PGListingSchema])
+async def get_owner_pgs(owner_id: int, db: Session = Depends(get_db)):
+    pgs = db.query(models.PGListing).filter(models.PGListing.owner_id == owner_id).order_by(models.PGListing.id.desc()).all()
+    return [serialize_pg(pg) for pg in pgs]
+
+@router.put("/{pg_id}/status")
+async def update_pg_status(pg_id: int, status: str, db: Session = Depends(get_db)):
+    pg = db.query(models.PGListing).filter(models.PGListing.id == pg_id).first()
+    if not pg:
+        raise HTTPException(status_code=404, detail="PG not found")
+    pg.status = status
+    db.commit()
+    db.refresh(pg)
+    return serialize_pg(pg)
