@@ -5,14 +5,17 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useToast } from '../../context/ToastContext';
+import { authService } from '../../services/api';
 
 const ADMIN_PASSWORD = 'admin123';
 
 // Self-contained Admin Login Modal
-const AdminLoginModal = ({ onClose, onSuccess }) => {
+const AdminLoginModal = ({ onClose, onSuccess, showToast }) => {
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [error, setError] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -21,6 +24,20 @@ const AdminLoginModal = ({ onClose, onSuccess }) => {
     } else {
       setError('Incorrect password. Try again.');
       setPassword('');
+    }
+  };
+
+  const handleForgot = async () => {
+    setIsResetting(true);
+    setError('');
+    try {
+      await authService.forgotPassword('adminpgdhundo@yopmail.com');
+      setResetSent(true);
+      showToast('Master admin password reset email sent ✉️', 'info');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to dispatch administrative reset email.');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -54,41 +71,65 @@ const AdminLoginModal = ({ onClose, onSuccess }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-1.5 px-1">
-              Admin Password
-            </label>
-            <div className="relative">
-              <input
-                autoFocus
-                type={show ? 'text' : 'password'}
-                value={password}
-                onChange={e => { setPassword(e.target.value); setError(''); }}
-                placeholder="Enter password"
-                className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 pr-12 text-sm font-bold outline-none transition-all ${
-                  error ? 'border-red-300 focus:border-red-400' : 'border-slate-200 focus:border-blue-500'
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setShow(!show)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                {show ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {error && (
-              <p className="text-[10px] font-bold text-red-500 mt-1.5 px-1">{error}</p>
-            )}
+        {resetSent ? (
+          <div className="text-center py-4">
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-wide leading-relaxed mb-6">
+              A secure password reset link has been dispatched to the master admin email address (adminpgdhundo@yopmail.com).
+            </p>
+            <button
+              onClick={() => setResetSent(false)}
+              className="text-[10px] font-black uppercase text-blue-600 hover:underline tracking-widest"
+            >
+              Back to Login
+            </button>
           </div>
-          <button
-            type="submit"
-            className="w-full py-3.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-colors"
-          >
-            Enter Admin Panel
-          </button>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1.5 px-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">
+                  Admin Password
+                </label>
+                <button
+                  type="button"
+                  onClick={handleForgot}
+                  disabled={isResetting}
+                  className="text-[9px] font-black uppercase text-blue-600 hover:underline tracking-widest disabled:opacity-50"
+                >
+                  {isResetting ? 'Sending...' : 'Forgot?'}
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  autoFocus
+                  type={show ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError(''); }}
+                  placeholder="Enter password"
+                  className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 pr-12 text-sm font-bold outline-none transition-all ${
+                    error ? 'border-red-300 focus:border-red-400' : 'border-slate-200 focus:border-blue-500'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShow(!show)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {error && (
+                <p className="text-[10px] font-bold text-red-500 mt-1.5 px-1">{error}</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-colors"
+            >
+              Enter Admin Panel
+            </button>
+          </form>
+        )}
 
         <p className="text-center text-[10px] font-bold text-slate-300 mt-4 uppercase tracking-widest">
           Hint: admin123
@@ -122,6 +163,7 @@ const Navbar = () => {
           <AdminLoginModal
             onClose={() => setIsAdminModalOpen(false)}
             onSuccess={handleAdminSuccess}
+            showToast={showToast}
           />
         )}
       </AnimatePresence>
@@ -268,7 +310,7 @@ const Navbar = () => {
                             )) : (
                                <div className="p-10 text-center">
                                   <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">No New Alerts</p>
-                               </div>
+                                </div>
                             )}
                          </div>
                          <button className="w-full py-4 bg-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">View All Notifications</button>

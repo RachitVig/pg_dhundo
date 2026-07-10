@@ -103,7 +103,7 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 inline-flex items-center gap-3 mb-10">
                       <ShieldCheck size={20} className="text-blue-600" />
                       <span className="text-[10px] font-black uppercase text-slate-600 tracking-widest text-left">
-                        Payments will be processed securely<br/>after physical verification.
+                         Payments will be processed securely<br/>after physical verification.
                       </span>
                    </div>
                    <button 
@@ -156,10 +156,10 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
                    <div className="mb-12">
                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-6">Available Configurations</h3>
                       <div className="space-y-4">
-                          {(pg.rooms || []).map((room, idx) => (
+                         {(pg.rooms || []).map((room, idx) => (
                             <div key={idx} className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center group hover:bg-white hover:border-blue-200 transition-all shadow-sm hover:shadow-md">
                                <div>
-                                   <h4 className="text-sm font-black uppercase text-slate-900 tracking-tight">{room.room_type} Room</h4>
+                                  <h4 className="text-sm font-black uppercase text-slate-900 tracking-tight">{room.room_type} Room</h4>
                                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                                      {room.occupied_beds < room.total_beds ? `${room.total_beds - room.occupied_beds} Beds Available` : 'Fully Occupied'}
                                   </p>
@@ -184,7 +184,7 @@ const PGDetailModal = ({ isOpen, onClose, pg, onOpenChat }) => {
                    {/* Footer Actions */}
                    <div className="sticky bottom-0 bg-white pt-6 pb-2 border-t border-slate-100 flex gap-4">
                       <button 
-                        onClick={() => { onOpenChat(); onClose(); }}
+                        onClick={() => { onOpenChat(); handleClose(); }}
                         className="flex-1 py-5 bg-slate-900 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-black transition-all shadow-xl active:scale-95"
                       >
                          <MessageSquare size={18} /> Chat Owner

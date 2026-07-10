@@ -28,6 +28,7 @@ apiClient.interceptors.request.use((config) => {
 export const pgService = {
 
   getAll: (params) => apiClient.get('/pgs', { params }),
+  getOne: (id) => apiClient.get(`/pgs/${id}`),
   create: (data) => apiClient.post('/pgs/', data),
   getAll_admin: () => apiClient.get('/pgs/all'),
   getOwnerPgs: (ownerId) => apiClient.get(`/pgs/owner/${ownerId}`),
@@ -55,6 +56,7 @@ export const bookingService = {
   verifyBooking: (bookingId, data) => apiClient.put(`/bookings/${bookingId}/verify`, data),
 };
 
+// ── WebSocket URL builder ─────────────────────────────────────────────────────
 export const getWsUrl = (pgId, clientId) => `${WS_BASE}/ws/chat/${pgId}/${clientId}`;
 
 export { API_BASE, WS_BASE };

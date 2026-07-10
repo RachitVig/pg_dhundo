@@ -9,7 +9,6 @@ from typing import List, Optional
 from app.database import get_db
 from app.models import PGListing, Room, Owner
 from app.schemas import PGListingSchema, PGCreateRequest
-from app.core.email import send_email
 
 router = APIRouter()
 
@@ -48,6 +47,7 @@ def serialize_pg(pg) -> dict:
         } for rev in pg.reviews]
     }
 
+
 @router.get("/", response_model=List[PGListingSchema])
 async def get_pgs(
     area: Optional[str] = None,
@@ -74,10 +74,12 @@ async def get_all_pgs(db: Session = Depends(get_db)):
     pgs = db.query(PGListing).order_by(PGListing.id.desc()).all()
     return [serialize_pg(pg) for pg in pgs]
 
+
 @router.get("/owner/{owner_id}", response_model=List[PGListingSchema])
 async def get_owner_pgs(owner_id: int, db: Session = Depends(get_db)):
     pgs = db.query(PGListing).filter(PGListing.owner_id == owner_id).order_by(PGListing.id.desc()).all()
     return [serialize_pg(pg) for pg in pgs]
+
 
 @router.get("/{pg_id}", response_model=PGListingSchema)
 async def get_pg(pg_id: int, db: Session = Depends(get_db)):
@@ -131,6 +133,7 @@ async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.put("/{pg_id}/status")
 async def update_pg_status(pg_id: int, status: str, db: Session = Depends(get_db)):

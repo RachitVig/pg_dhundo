@@ -152,4 +152,4 @@ class BookingSchema(BookingCreate):
     created_at: datetime
 
     class Config:
-        from_attributes = True
+      from_attributes = True
