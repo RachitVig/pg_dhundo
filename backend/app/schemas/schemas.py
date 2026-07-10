@@ -1,14 +1,7 @@
-"""
-app/schemas/schemas.py
-Pydantic v2 schemas for request validation and response serialization.
-Moved from app/schemas.py into the schemas/ package.
-"""
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
-
-# ── Auth Schemas ──────────────────────────────────────────────────────────────
 
 class LoginRequest(BaseModel):
     email: str
@@ -38,8 +31,6 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: UserSchema
 
-
-# ── PG / Room / Review Schemas ────────────────────────────────────────────────
 
 class RoomSchema(BaseModel):
     id: int
@@ -79,6 +70,7 @@ class PGListingSchema(BaseModel):
     owner_id: Optional[int] = None
     owner_phone: Optional[str] = None
     amenities: Optional[str] = None
+    status: str = "PENDING"
     rooms: List[RoomSchema] = []
     reviews: List[ReviewSchema] = []
 
@@ -95,8 +87,6 @@ class PGCreateRequest(BaseModel):
     price: float
     amenities: Optional[str] = None
 
-
-# ── Chat Schemas ──────────────────────────────────────────────────────────────
 
 class ChatMessageSchema(BaseModel):
     sender: str
@@ -116,8 +106,6 @@ class AdminStatsResponse(BaseModel):
     recent_users: List[dict]
 
 
-# ── New SMTP-related Schemas ──────────────────────────────────────────────────
-
 class ForgotPasswordRequest(BaseModel):
     email: str
 
@@ -133,8 +121,6 @@ class BookingInquiryRequest(BaseModel):
     phone: str
     room_type: str
 
-
-# ── Booking Schemas ───────────────────────────────────────────────────────────
 
 class BookingCreate(BaseModel):
     pg_id: int
@@ -152,4 +138,4 @@ class BookingSchema(BookingCreate):
     created_at: datetime
 
     class Config:
-      from_attributes = True
+        from_attributes = True
