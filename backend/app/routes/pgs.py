@@ -1,12 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+"""
+app/routes/pgs.py
+PG listing CRUD endpoints.
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+
 from app.database import get_db
-from app import models, schemas
+from app.models import PGListing, Room, Owner
+from app.schemas import PGListingSchema, PGCreateRequest
+from app.core.email import send_email
 
-router = APIRouter(prefix="/pgs", tags=["PG Listings"])
+router = APIRouter()
 
-def serialize_pg(pg):
+
+def serialize_pg(pg) -> dict:
+    """Convert a PGListing ORM object to a plain dict for JSON serialization."""
     return {
         "id": pg.id,
         "name": pg.name,
@@ -39,87 +48,93 @@ def serialize_pg(pg):
         } for rev in pg.reviews]
     }
 
-@router.get("/", response_model=List[schemas.PGListingSchema])
+@router.get("/", response_model=List[PGListingSchema])
 async def get_pgs(
-    area: Optional[str] = None, 
+    area: Optional[str] = None,
     gender: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
+    """List all PG listings with optional filters for area and gender category."""
     try:
-        query = db.query(models.PGListing).filter(models.PGListing.status == "APPROVED")
+        query = db.query(PGListing).filter(PGListing.status == "APPROVED")
         if area:
-            query = query.filter(models.PGListing.area.ilike(f"%{area}%"))
-        if gender and gender != "All":
-            query = query.filter(models.PGListing.gender_category == gender.upper())
-        
-        pgs = query.all()
-        return [serialize_pg(pg) for pg in pgs]
+            query = query.filter(PGListing.area.ilike(f"%{area}%"))
+        if gender and gender.upper() != "ALL":
+            query = query.filter(PGListing.gender_category == gender.upper())
+
+        return [serialize_pg(pg) for pg in query.all()]
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/", response_model=schemas.PGListingSchema)
-async def create_pg(
-    pg_data: schemas.PGCreateRequest,
-    db: Session = Depends(get_db)
-):
+
+@router.get("/all", response_model=List[PGListingSchema])
+async def get_all_pgs(db: Session = Depends(get_db)):
+    # For Admin — must be declared BEFORE /{pg_id} to avoid route conflict
+    pgs = db.query(PGListing).order_by(PGListing.id.desc()).all()
+    return [serialize_pg(pg) for pg in pgs]
+
+@router.get("/owner/{owner_id}", response_model=List[PGListingSchema])
+async def get_owner_pgs(owner_id: int, db: Session = Depends(get_db)):
+    pgs = db.query(PGListing).filter(PGListing.owner_id == owner_id).order_by(PGListing.id.desc()).all()
+    return [serialize_pg(pg) for pg in pgs]
+
+@router.get("/{pg_id}", response_model=PGListingSchema)
+async def get_pg(pg_id: int, db: Session = Depends(get_db)):
+    """Fetch a single PG listing by ID."""
+    pg = db.query(PGListing).filter(PGListing.id == pg_id).first()
+    if not pg:
+        raise HTTPException(status_code=404, detail="PG listing not found.")
+    return serialize_pg(pg)
+
+
+@router.post("/", response_model=PGListingSchema, status_code=status.HTTP_201_CREATED)
+async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
+    """Create a new PG listing."""
     try:
-        # Get a default owner for now if owner is not specified
-        owner = db.query(models.Owner).first()
+        owner = db.query(Owner).first()
         if not owner:
-            owner = models.Owner(name="Default Owner", email="owner@example.com", phone="9999999999")
+            owner = Owner(name="Default Owner", email="owner@pgdhundo.com", phone="9999999999")
             db.add(owner)
             db.commit()
             db.refresh(owner)
 
-        new_pg = models.PGListing(
+        new_pg = PGListing(
             name=pg_data.name,
             description=pg_data.description,
-            address=pg_data.address,
+            address=pg_data.address or "",
             area=pg_data.area,
-            gender_category=pg_data.gender_category,
-            lat=30.7333, # Default logic
+            gender_category=pg_data.gender_category.upper(),
+            lat=30.7333,
             lng=76.7794,
-            rating=5.0, # Initial rating
+            rating=5.0,
             owner_id=owner.id,
             owner_phone=owner.phone,
-            amenities="WiFi, AC, Security, Meals", # Default
+            amenities="WiFi, AC, Security, Meals",  # Default
             status="PENDING"
         )
         db.add(new_pg)
         db.flush()
-        
-        # Add default room
-        new_room = models.Room(
+
+        new_room = Room(
             pg_id=new_pg.id,
             room_type="SINGLE",
             price=pg_data.price,
             total_beds=5,
-            occupied_beds=0
+            occupied_beds=0,
         )
         db.add(new_room)
         db.commit()
         db.refresh(new_pg)
-        
+
         return serialize_pg(new_pg)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/all", response_model=List[schemas.PGListingSchema])
-async def get_all_pgs(db: Session = Depends(get_db)):
-    # For Admin
-    pgs = db.query(models.PGListing).order_by(models.PGListing.id.desc()).all()
-    return [serialize_pg(pg) for pg in pgs]
-
-@router.get("/owner/{owner_id}", response_model=List[schemas.PGListingSchema])
-async def get_owner_pgs(owner_id: int, db: Session = Depends(get_db)):
-    pgs = db.query(models.PGListing).filter(models.PGListing.owner_id == owner_id).order_by(models.PGListing.id.desc()).all()
-    return [serialize_pg(pg) for pg in pgs]
-
 @router.put("/{pg_id}/status")
 async def update_pg_status(pg_id: int, status: str, db: Session = Depends(get_db)):
-    pg = db.query(models.PGListing).filter(models.PGListing.id == pg_id).first()
+    pg = db.query(PGListing).filter(PGListing.id == pg_id).first()
     if not pg:
         raise HTTPException(status_code=404, detail="PG not found")
     pg.status = status

@@ -1,22 +1,39 @@
+"""
+app/database.py
+SQLAlchemy engine and session factory.
+Settings are now imported from app.core.config.
+"""
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Generator
 
-class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://postgres:postgres@127.0.0.1:5432/pg_dhundo"
+from app.core.config import settings
+
+# ── Engine ────────────────────────────────────────────────────────────────────
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
     
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    connect_args["check_same_thread"] = False
 
-settings = Settings()
+engine = create_engine(
+    settings.DATABASE_URL,
+    connect_args=connect_args,
+    pool_pre_ping=True,
+    pool_recycle=300,         
+)
 
-engine = create_engine(settings.DATABASE_URL)
+# ── Session factory ───────────────────────────────────────────────────────────
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# ── Declarative base ──────────────────────────────────────────────────────────
 
 Base = declarative_base()
 
-def get_db():
+
+# ── Dependency ────────────────────────────────────────────────────────────────
+def get_db() -> Generator:
+    """FastAPI dependency that yields a DB session and ensures it closes."""
     db = SessionLocal()
     try:
         yield db
