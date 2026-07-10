@@ -85,13 +85,6 @@ async def get_pg(pg_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=PGListingSchema, status_code=status.HTTP_201_CREATED)
 async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
     try:
-        owner = db.query(Owner).first()
-        if not owner:
-            owner = Owner(name="Default Owner", email="owner@pgdhundo.com", phone="9999999999")
-            db.add(owner)
-            db.commit()
-            db.refresh(owner)
-
         new_pg = PGListing(
             name=pg_data.name,
             description=pg_data.description,
@@ -101,9 +94,9 @@ async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
             lat=30.7333,
             lng=76.7794,
             rating=5.0,
-            owner_id=owner.id,
-            owner_phone=owner.phone,
-            amenities="WiFi, AC, Security, Meals",
+            owner_id=1,
+            owner_phone="9876543210",
+            amenities=pg_data.amenities or "WiFi, AC, Security, Meals",
             status="PENDING"
         )
         db.add(new_pg)
