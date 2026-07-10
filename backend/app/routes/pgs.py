@@ -1,7 +1,3 @@
-"""
-app/routes/pgs.py
-PG listing CRUD endpoints.
-"""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -14,7 +10,6 @@ router = APIRouter()
 
 
 def serialize_pg(pg) -> dict:
-    """Convert a PGListing ORM object to a plain dict for JSON serialization."""
     return {
         "id": pg.id,
         "name": pg.name,
@@ -54,7 +49,6 @@ async def get_pgs(
     gender: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    """List all PG listings with optional filters for area and gender category."""
     try:
         query = db.query(PGListing).filter(PGListing.status == "APPROVED")
         if area:
@@ -70,7 +64,6 @@ async def get_pgs(
 
 @router.get("/all", response_model=List[PGListingSchema])
 async def get_all_pgs(db: Session = Depends(get_db)):
-    # For Admin — must be declared BEFORE /{pg_id} to avoid route conflict
     pgs = db.query(PGListing).order_by(PGListing.id.desc()).all()
     return [serialize_pg(pg) for pg in pgs]
 
@@ -83,7 +76,6 @@ async def get_owner_pgs(owner_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{pg_id}", response_model=PGListingSchema)
 async def get_pg(pg_id: int, db: Session = Depends(get_db)):
-    """Fetch a single PG listing by ID."""
     pg = db.query(PGListing).filter(PGListing.id == pg_id).first()
     if not pg:
         raise HTTPException(status_code=404, detail="PG listing not found.")
@@ -92,7 +84,6 @@ async def get_pg(pg_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=PGListingSchema, status_code=status.HTTP_201_CREATED)
 async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
-    """Create a new PG listing."""
     try:
         owner = db.query(Owner).first()
         if not owner:
@@ -112,7 +103,7 @@ async def create_pg(pg_data: PGCreateRequest, db: Session = Depends(get_db)):
             rating=5.0,
             owner_id=owner.id,
             owner_phone=owner.phone,
-            amenities="WiFi, AC, Security, Meals",  # Default
+            amenities="WiFi, AC, Security, Meals",
             status="PENDING"
         )
         db.add(new_pg)
