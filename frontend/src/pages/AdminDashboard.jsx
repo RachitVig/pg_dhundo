@@ -240,14 +240,6 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          {/* Password note */}
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-3 rounded-2xl">
-            <Shield size={14} className="text-amber-500 shrink-0"/>
-            <div>
-              <p className="text-[10px] font-black uppercase text-amber-600">Admin Password</p>
-              <p className="text-sm font-black text-amber-700 tracking-widest">admin123</p>
-            </div>
-          </div>
         </div>
 
         {/* Tab Nav */}

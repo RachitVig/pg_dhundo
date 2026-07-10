@@ -216,7 +216,7 @@ const Navbar = () => {
                                </button>
                                {['admin@pgdhundo.com', 'adminpgdhundo@yopmail.com'].includes(currentUser?.email) && (
                                  <button
-                                   onClick={() => { setCurrentView('admin'); setIsProfileOpen(false); showToast('Welcome to Admin Panel 🛡️'); }}
+                                   onClick={() => { setIsAdminModalOpen(true); setIsProfileOpen(false); }}
                                    className="w-full text-left p-3 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex items-center gap-2"
                                  >
                                    <ShieldCheck size={12} /> Admin Panel
