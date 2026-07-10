@@ -27,7 +27,7 @@ apiClient.interceptors.request.use((config) => {
 // ── Service modules ───────────────────────────────────────────────────────────
 export const pgService = {
 
-  getAll: (params) => apiClient.get('/pgs', { params }),
+  getAll: (params) => apiClient.get('/pgs/', { params }),
   getOne: (id) => apiClient.get(`/pgs/${id}`),
   create: (data) => apiClient.post('/pgs/', data),
   getAll_admin: () => apiClient.get('/pgs/all'),
